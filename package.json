@@ -1,0 +1,26 @@
+{
+  "name": "@kilroy-code/persist",
+  "version": "0.0.1",
+  "description": "Simple experimental key-value store with listings.",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kilroy-code/persist.git"
+  },
+  "keywords": [
+    "storage",
+    "persistence"
+  ],
+  "author": "howard-stearns",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kilroy-code/persist/issues"
+  },
+  "homepage": "https://github.com/kilroy-code/persist#readme",
+  "dependencies": {
+    "nocache": "^4.0.0"
+  }
+}
