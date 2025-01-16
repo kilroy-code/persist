@@ -38,24 +38,31 @@ async function storeInCollection(req, res, next) {
 
   // Store verified body by either writing it to a file or removing the file (if there's no content).
   // Requires req.verified to be set.
-  const {body} = req,
-	{collectionName, tag} = req.params,
-	pathname = `${dbPath}/${collectionName}/${tag}.json`;
-  if (body) {
-    await fs.writeFile(pathname, body, {flush: true});
-  } else {
-    // Subtle: If there's no verifiedContent, we delete the file. But some implementations of unlink resolve before
-    // the file system has truly flushed the data. That can result in (await Security.destroy(); await Security.retrieve())
-    // producing the old data! We handle this by moving the file out of the way and then deleting that.
-    const alt = pathname + '.DEL';   // Because of request queueing, overlapping requests to the same tag will have "completed" unlink before next rename.
-    await fs.rename(pathname, alt);
-    await fs.unlink(alt);
+  try {
+    const {body} = req,
+	  {collectionName, tag} = req.params,
+	  pathname = `${dbPath}/${collectionName}/${tag}.json`;
+    if (body) {
+      await fs.writeFile(pathname, body, {flush: true});
+    } else {
+      // Subtle: If there's no verifiedContent, we delete the file. But some implementations of unlink resolve before
+      // the file system has truly flushed the data. That can result in (await Security.destroy(); await Security.retrieve())
+      // producing the old data! We handle this by moving the file out of the way and then deleting that.
+      const alt = pathname + '.DEL';   // Because of request queueing, overlapping requests to the same tag will have "completed" unlink before next rename.
+      await fs.rename(pathname, alt);
+      await fs.unlink(alt);
+    }
+    next();
+  } catch (e) {
+    next(e);
   }
-  next();
 }
 
 router.use(nocache()); // All stored objects are mutable.
-router.use(express.text({type: 'application/json'})); // Define req.body, but don't use broken express.json parser that does not handle toplevel non-objects.
+router.use(express.text({ // Define req.body, but don't use broken express.json parser that does not handle toplevel non-objects.
+  type: 'application/json',
+  limit: '5mb'
+})); 
 router.get('/:collectionName/list.json', enqueueRequest, listCollectionKeys);
 router.use('/', express.static(dbPath));
 router.post('/:collectionName/:tag.json', enqueueRequest, storeInCollection, answerEmptyJSON);
