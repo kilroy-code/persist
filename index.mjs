@@ -54,6 +54,7 @@ async function storeInCollection(req, res, next) {
     }
     next();
   } catch (e) {
+    console.warn(e.message || e, e.stack);
     next(e);
   }
 }
